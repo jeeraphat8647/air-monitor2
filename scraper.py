@@ -11,12 +11,9 @@ import datetime
 import subprocess
 
 # ================= CONFIG =================
-
 URL = "http://182.52.103.224/"
 
-# ===== USE CURRENT DIRECTORY (GitHub Actions) =====
 BASE_DIR = os.getcwd()
-
 DATA_DIR = os.path.join(BASE_DIR, "data")
 LOG_DIR = os.path.join(BASE_DIR, "log")
 
@@ -31,59 +28,63 @@ def write_log(msg):
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{now}] {msg}"
     print(line)
-
     with open(LOG_PATH, "a", encoding="utf-8") as f:
         f.write(line + "\n")
 
-# ================= LOAD SAVED RECORDS =================
+# ================= LOAD SAVED =================
 def get_saved_records():
     records = set()
-
     if not os.path.exists(CSV_PATH):
         return records
 
     with open(CSV_PATH, "r", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         next(reader, None)
-
         for row in reader:
             key = f"{row[0]}_{row[1]}_{row[2]}"
             records.add(key)
 
     return records
 
-# ================= EXTRACT DATA =================
+# ================= PARSE DATA =================
 def get_data(driver):
     popup = WebDriverWait(driver,10).until(
-        EC.presence_of_element_located(
+        EC.visibility_of_element_located(
             (By.CLASS_NAME,"leaflet-popup-content"))
     )
 
     text = popup.text
-    station = text.split("\n")[0]
+    lines = text.split("\n")
 
-    # ===== DATE TIME =====
-    datetime_match = re.search(
-        r"อัพเดทข้อมูลเวลา\s*(.+?\d{2}:\d{2})", text
-    )
-
+    station = ""
     date = ""
     time_data = ""
+    benzene = None
+    butadiene = None
 
-    if datetime_match:
-        dt_text = datetime_match.group(1)
-        parts = dt_text.rsplit(" ",1)
+    for line in lines:
 
-        date = parts[0]
-        time_data = parts[1]
-    else:
-        write_log("⚠️ Date parse failed")
+        if "สถานี" in line:
+            station = line.strip()
 
-    benzene_match = re.search(r"เบนซีน\s*([\d\.]+)", text)
-    butadiene_match = re.search(r"1,3-บิวทาไดอีน\s*([\d\.]+)", text)
+        if "อัพเดทข้อมูลเวลา" in line:
+            match = re.search(r"(\d{1,2} .+ \d{4}) (\d{2}:\d{2})", line)
+            if match:
+                date = match.group(1)
+                time_data = match.group(2)
 
-    benzene = float(benzene_match.group(1)) if benzene_match else None
-    butadiene = float(butadiene_match.group(1)) if butadiene_match else None
+        if "เบนซีน" in line:
+            m = re.search(r"([\d\.]+)", line)
+            if m:
+                benzene = float(m.group(1))
+
+        if "บิวทาไดอีน" in line:
+            m = re.search(r"([\d\.]+)", line)
+            if m:
+                butadiene = float(m.group(1))
+
+    if not station and len(lines) > 0:
+        station = lines[0]
 
     return station, date, time_data, benzene, butadiene
 
@@ -98,7 +99,6 @@ def create_driver():
 
     driver = webdriver.Chrome(options=options)
     driver.set_window_size(1920,1080)
-
     return driver
 
 # ================= GIT PUSH =================
@@ -115,6 +115,7 @@ def push_to_github():
 
 # ================= MAIN =================
 def main():
+
     file_exists = os.path.isfile(CSV_PATH)
 
     csv_file = open(CSV_PATH,"a",newline="",encoding="utf-8-sig")
@@ -126,8 +127,6 @@ def main():
     saved_records = get_saved_records()
 
     write_log(f"📌 Loaded {len(saved_records)} existing records")
-    write_log(f"💾 CSV PATH: {CSV_PATH}")
-    write_log(f"📝 LOG PATH: {LOG_PATH}")
 
     driver = None
 
@@ -137,73 +136,72 @@ def main():
         driver = create_driver()
         driver.get(URL)
 
-        wait = WebDriverWait(driver,20)
-
-        wait.until(
+        WebDriverWait(driver,20).until(
             EC.presence_of_element_located(
                 (By.CLASS_NAME,"leaflet-marker-icon"))
         )
 
         markers = driver.find_elements(By.CLASS_NAME,"leaflet-marker-icon")
 
+        write_log(f"📍 Found {len(markers)} markers")
+
         success_count = 0
 
-        for marker in markers:
-            for attempt in range(2):  # retry 2 ครั้ง
+        for i in range(len(markers)):
+
+            try:
+                markers = driver.find_elements(By.CLASS_NAME,"leaflet-marker-icon")
+                marker = markers[i]
+
+                # ปิด popup เก่า
                 try:
-                    driver.execute_script(
-                        "arguments[0].scrollIntoView(true);", marker)
+                    close_btn = driver.find_element(By.CLASS_NAME, "leaflet-popup-close-button")
+                    close_btn.click()
+                except:
+                    pass
 
-                    driver.execute_script(
-                        "arguments[0].click();", marker)
+                driver.execute_script("arguments[0].scrollIntoView(true);", marker)
 
-                    # รอ popup แทน sleep
-                    WebDriverWait(driver,10).until(
-                        EC.presence_of_element_located(
-                            (By.CLASS_NAME,"leaflet-popup-content"))
-                    )
+                # click 2 แบบ
+                try:
+                    driver.execute_script("arguments[0].click();", marker)
+                except:
+                    marker.click()
 
-                    station,date,time_data,benzene,butadiene = get_data(driver)
+                # รอ popup
+                WebDriverWait(driver,10).until(
+                    EC.visibility_of_element_located(
+                        (By.CLASS_NAME,"leaflet-popup-content"))
+                )
 
-                    current_key = f"{station}_{date}_{time_data}"
+                station,date,time_data,benzene,butadiene = get_data(driver)
 
-                    if current_key in saved_records:
-                        write_log(f"⏩ Skip duplicate: {station}")
-                        break
+                write_log(f"📍 DEBUG: {station}")
 
-                    if benzene is None and butadiene is None:
-                        write_log(f"⚠️ No data: {station}")
-                        break
+                if not station:
+                    write_log("⚠️ Empty station")
+                    continue
 
-                    writer.writerow([
-                        station,
-                        date,
-                        time_data,
-                        benzene,
-                        butadiene
-                    ])
+                key = f"{station}_{date}_{time_data}"
 
-                    csv_file.flush()
+                if key in saved_records:
+                    write_log(f"⏩ Skip duplicate: {station}")
+                    continue
 
-                    saved_records.add(current_key)
-                    success_count += 1
+                if benzene is None and butadiene is None:
+                    write_log(f"⚠️ No data: {station}")
+                    continue
 
-                    write_log(
-                        f"✅ {station} | BZ={benzene} | BD={butadiene}"
-                    )
+                writer.writerow([station,date,time_data,benzene,butadiene])
+                csv_file.flush()
 
-                    # ปิด popup
-                    try:
-                        close_btn = driver.find_element(By.CLASS_NAME, "leaflet-popup-close-button")
-                        close_btn.click()
-                    except:
-                        pass
+                saved_records.add(key)
+                success_count += 1
 
-                    break
+                write_log(f"✅ {station} | BZ={benzene} | BD={butadiene}")
 
-                except Exception as e:
-                    if attempt == 1:
-                        write_log(f"❌ Marker error: {e}")
+            except Exception as e:
+                write_log(f"❌ Marker error: {e}")
 
         write_log(f"🎯 Finished | Saved {success_count} stations")
 
@@ -212,7 +210,6 @@ def main():
 
     finally:
         csv_file.close()
-
         if driver:
             driver.quit()
 
