@@ -1,0 +1,37 @@
+name: Run Air Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # รันทุก 30 นาที
+  workflow_dispatch:        # กดรันเองได้
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🌐 Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: ▶️ Run scraper
+        run: |
+          python scraper.py
