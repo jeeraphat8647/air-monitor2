@@ -2,7 +2,7 @@ name: Run Air Monitor
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # รันทุก 30 นาที
+    - cron: "0 * * * *"   # รันทุก 30 นาที
   workflow_dispatch:        # กดรันเองได้
 
 permissions:
