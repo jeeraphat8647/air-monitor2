@@ -492,3 +492,7 @@
 [2026-04-22 15:51:56] ⏩ Skip duplicate: สถานีตรวจวัดคุณภาพอากาศชุมชนบ้านพลง(Baan Plong Station)
 [2026-04-22 15:51:56] 🎯 Finished | Saved 3 stations
 [2026-04-22 15:51:56] 🛑 PROGRAM CLOSED
+[2026-04-22 19:55:28] 📌 Loaded 101 existing records
+[2026-04-22 19:55:28] 🚀 START PROGRAM
+[2026-04-22 19:57:43] ❌ MAIN ERROR: HTTPConnectionPool(host='localhost', port=40311): Read timed out. (read timeout=120)
+[2026-04-22 20:00:43] 🛑 PROGRAM CLOSED
