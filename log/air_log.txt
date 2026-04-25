@@ -564,3 +564,7 @@
 [2026-04-25 17:11:11] 🚀 START PROGRAM
 [2026-04-25 17:13:17] ❌ MAIN ERROR: HTTPConnectionPool(host='localhost', port=48785): Read timed out. (read timeout=120)
 [2026-04-25 17:16:17] 🛑 PROGRAM CLOSED
+[2026-04-25 19:57:40] 📌 Loaded 101 existing records
+[2026-04-25 19:57:40] 🚀 START PROGRAM
+[2026-04-25 19:59:46] ❌ MAIN ERROR: HTTPConnectionPool(host='localhost', port=49851): Read timed out. (read timeout=120)
+[2026-04-25 20:02:46] 🛑 PROGRAM CLOSED
