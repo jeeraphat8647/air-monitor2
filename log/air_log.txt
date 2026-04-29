@@ -644,3 +644,16 @@
 [2026-04-29 07:50:50] 🚀 START PROGRAM
 [2026-04-29 07:52:55] ❌ MAIN ERROR: HTTPConnectionPool(host='localhost', port=57601): Read timed out. (read timeout=120)
 [2026-04-29 07:55:55] 🛑 PROGRAM CLOSED
+[2026-04-29 13:10:38] 📌 Loaded 101 existing records
+[2026-04-29 13:10:38] 🚀 START PROGRAM
+[2026-04-29 13:10:48] 📍 Found 4 markers
+[2026-04-29 13:10:48] 📍 DEBUG: อัพเดทข้อมูลเวลา : 29 เมษายน 2569 19:45
+[2026-04-29 13:10:48] ✅ อัพเดทข้อมูลเวลา : 29 เมษายน 2569 19:45 | BZ=None | BD=1.0
+[2026-04-29 13:10:49] 📍 DEBUG: สถานีตรวจวัดคุณภาพอากาศศูนย์บริการสาธารณสุขตากวน(Takuan Station)
+[2026-04-29 13:10:49] ✅ สถานีตรวจวัดคุณภาพอากาศศูนย์บริการสาธารณสุขตากวน(Takuan Station) | BZ=None | BD=1.0
+[2026-04-29 13:10:49] 📍 DEBUG: สถานีตรวจวัดคุณภาพอากาศชุมชนบ้านพลง(Baan Plong Station)
+[2026-04-29 13:10:49] ✅ สถานีตรวจวัดคุณภาพอากาศชุมชนบ้านพลง(Baan Plong Station) | BZ=None | BD=1.0
+[2026-04-29 13:10:49] 📍 DEBUG: สถานีตรวจวัดคุณภาพอากาศชุมชนบ้านพลง(Baan Plong Station)
+[2026-04-29 13:10:49] ⏩ Skip duplicate: สถานีตรวจวัดคุณภาพอากาศชุมชนบ้านพลง(Baan Plong Station)
+[2026-04-29 13:10:49] 🎯 Finished | Saved 3 stations
+[2026-04-29 13:10:49] 🛑 PROGRAM CLOSED
